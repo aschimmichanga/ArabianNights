@@ -72,7 +72,6 @@ def main():
 
         # sky
         draw_sky(DISPLAYSURF, counter)
-        draw_cloud(DISPLAYSURF)
 
         # background
         draw_bg_buildings(DISPLAYSURF)
@@ -127,8 +126,10 @@ def draw_window(screen, x, y):
     #LIGHT_OFF = (56, 31, 24)
     pygame.draw.rect(screen, LIGHT_ON, (x, y, 6, 10), 0)
 
-def draw_cloud(screen):
-    cloud_points = ((323, 138), (335, 134), (342, 138),
+def draw_cloud(screen, counter):
+    CLOUD = (141, 110, 138)
+    CLOUD_LINE = (166, 144, 156)
+    og_cloud_points = [(323, 138), (335, 134), (342, 138),
                     (356, 133), (382, 147), (406, 135),
                     (425, 138), (443, 135), (448, 131),
                     (440, 131), (421, 132), (410, 132),
@@ -140,11 +141,31 @@ def draw_cloud(screen):
                     (317, 123), (318, 127), (321, 129),
                     (330, 133), (331, 135), (324, 138),
                     (317, 136), (311, 138), (309, 141),
-                    (310, 142))
-    CLOUD = (141, 110, 138)
-    CLOUD_LINE = (166, 144, 156)
-    pygame.draw.polygon(screen, CLOUD, cloud_points)
-    pygame.draw.lines(screen, CLOUD_LINE, True, cloud_points, 3)
+                    (310, 142)]
+    cloud_points = [(0,0)]
+
+    cloud_width = max(og_cloud_points)[0] - min(og_cloud_points)[0]
+    max_x = max(og_cloud_points)[0]
+    min_x = min(og_cloud_points)[0]
+
+    counter %= SCREEN_HEIGHT
+
+    if max_x - counter > 0 or (max_x - counter <= 0 and max_x + SCREEN_HEIGHT + cloud_width - counter < SCREEN_HEIGHT):
+        cloud_points.clear()
+        for pair in og_cloud_points:
+            x = pair[0] - counter
+            cloud_points.append((x, pair[1]))
+        print("yes")
+    else:
+        cloud_points.clear()
+        for pair in og_cloud_points:
+            x = pair[0] + SCREEN_HEIGHT + cloud_width - counter
+            cloud_points.append((x, pair[1]))
+        print("no")
+
+    if max(cloud_points)[0] > 0:
+        pygame.draw.polygon(screen, CLOUD, cloud_points)
+        pygame.draw.lines(screen, CLOUD_LINE, True, cloud_points, 3)
 
 def draw_stars(screen):
     pixObj = pygame.PixelArray(screen)
@@ -196,21 +217,25 @@ def draw_sky(screen, counter):
     elif counter // half_screen % 4 == 1: # sunrise to day
         y =  SCREEN_WIDTH - counter % half_screen
         first_color = TARAN_TADO
-        second_color = SKY
+        second_color = JUICY_ORANGE
     elif counter // half_screen % 4 == 2: # day to sunset
         y =  half_screen + counter % half_screen
-        first_color = SKY
+        first_color = JUICY_ORANGE
         second_color = BOURBON
     else: # dusk to night
         y = SCREEN_WIDTH - counter % half_screen
         first_color = BOURBON
         second_color = DARK_PURPLE
 
+    
+    # temp = 2**20
+    # half_screen = int((temp/2+1) * SCREEN_WIDTH/temp)
+
     rate1 = (float(second_color[0][0]-first_color[0][0])/half_screen,
             float(second_color[0][1]-first_color[0][1])/half_screen,
             float(second_color[0][2]-first_color[0][2])/half_screen)
 
-    rate2 = (float(second_color[1][0]-first_color[1][0])/half_screen,
+    rate2 = (float(second_color[1][0]-first_color[1][0])/ half_screen,
             float(second_color[1][1]-first_color[1][1])/half_screen,
             float(second_color[1][2]-first_color[1][2])/half_screen)
 
@@ -226,11 +251,11 @@ def draw_sky(screen, counter):
 
     fill_gradient(screen, temp1, temp2)
     
-    
-
     pygame.draw.circle(screen, MOON,
                        (int(SCREEN_HEIGHT/2), y),
                        150, 0)
+
+    draw_cloud(screen, counter)
 
 def draw_dune(screen, seq_order):
     color = DARK_SAND
